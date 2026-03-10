@@ -16,6 +16,30 @@
 
 `sqlx` 目前不直接提供上述等价能力，因此**无法直接替换** tokenizer 注册层。
 
+## sqlx 如何操作 SQLite 数据库文件？与 rusqlite 是否一致？
+
+### sqlx 操作 SQLite 文件的方式
+
+`sqlx` 通过 SQLite 连接字符串（URL）访问数据库文件，常见形式：
+
+- `sqlite::memory:`：内存库；
+- `sqlite://data.db`：当前目录下文件；
+- `sqlite:///absolute/path/to/data.db`：绝对路径文件。
+
+通常会通过连接池（`SqlitePool`）或单连接（`SqliteConnection`）执行 SQL。对“普通建表、增删改查、事务”场景，和 `rusqlite` 在能力上基本一致。
+
+### 与 rusqlite 的一致点
+
+- 都是操作同一个 SQLite 引擎与同一种数据库文件；
+- 都支持常见 SQL 与事务语义；
+- 都可用于内存库和文件库。
+
+### 与 rusqlite 的关键差异（本项目最相关）
+
+- `rusqlite` 更偏底层，便于直接调用 SQLite C API / FFI；
+- `sqlx` 更偏高层异步访问，默认不暴露本项目当前所需的底层句柄能力；
+- 因此在本项目里：**业务查询层可迁移到 sqlx，FTS5 tokenizer 注册层仍需保留 rusqlite-ext**。
+
 ## 推荐迁移路径（最小风险）
 
 ### Phase 1：分层（先做）
